@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCC 50 MARKS TEST</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed Navbar */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #3f038f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        /* Timer styling under the navbar */
+        .timer {
+            text-align: right;
+            font-size: 18px;
+            margin: 20px 20px;
+            position: fixed;
+            top:30px;
+            right: 0;
+            padding: 12px 24px;
+            background-color: #3f038f;
+            color: white;
+            border-radius: 10px;
+        }
+
+        /* Center the quiz container with padding */
+        .quiz-container {
+            padding: 20px;
+            margin: 0 auto;
+            width: 70%;
+            max-width: 900px;
+            margin-top: 100px; /* Space for fixed navbar */
+        }
+
+        .question-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .question-container p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .question-container input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #3f038f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #5e0cbe;
+        }
+
+        .result-popup, .answer-page {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 999;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .result-popup h2, .answer-page h2 {
+            margin-bottom: 20px;
+        }
+
+        .answer-page p {
+            text-align: left;
+            margin: 10px 0;
+            padding: 5px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        .correct-answer {
+            color: #4caf50;
+        }
+
+        .incorrect-answer {
+            color: #f44336;
+        }
+
+        .highlight {
+            background-color: #ffeb3b;
+        }
+
+        .highlight-btn {
+            background-color: #ff5722;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-box {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 300px; /* Set fixed width for form popup */
+            position: absolute;
+            top: 50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .form-box input {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .form-box button {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 250px;
+            margin: 20px 0;
+        }
+
+        .result-info {
+            margin-bottom: 20px;
+        }
+
+        .score-percentage {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .time-taken {
+            font-size: 16px;
+            color: #555;
+        }
+
+        /* Adjusting for better positioning of the form */
+        .form-box input, .form-box button {
+            margin: 5px 0;
+        }
+
+        .navbar {width: 100%; height: 100px; background-color: #3f038f;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 100px; box-sizing: border-box;
+            
+        }
+        .navbar img { height: 65%; }
+        .navbar h1 { color: white; }
+        .navbar button { background-color: white; color: black; font-weight: bolder; }
+
+
+        @media only screen and (max-width:540px) {
+            .navbar { height: 50px; padding: 0 30px; }
+            .navbar h1 { font-size: 12px; }
+            .navbar button { padding: 5px 15px; }
+        }
+
+        /* Scrollable Answer List */
+        .answers-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Close button positioning */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar"><img src="next-academy-logo.png" alt=""> <h1>CCC TEST</h1> <button>50 Marks</button></nav>
+
+    <!-- Popup to collect student details -->
+    <div id="student-popup" class="form-container">
+        <div class="form-box">
+            <h2>Enter Your Details</h2>
+            <form id="student-form">
+                <input type="text" id="student-name" placeholder="Name" required>
+                <input type="text" id="student-roll" placeholder="Roll Number" required>
+                <button type="submit">Start Quiz</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="quiz-container" style="display:none;">
+
+        <!-- timer  -->
+        <div class="timer" id="timer">Time Left: 10:00</div>
+
+        <!-- Questions Attached in Js -->
+        <div id="quiz-content"></div>
+
+        <button onclick="submitQuiz()">Submit Quiz</button>
+    </div>
+
+    <!-- Result Popup -->
+    <div id="result-popup" class="result-popup">
+        <button class="course Name">CCC (50 MARKS)</button>
+        <h2><span id="student-name-result"></span></h2>
+        <div class="result-info">
+            <p id="result-msg"></p>
+            <p class="score-percentage" id="score-percentage"></p>
+            <p class="time-taken" id="time-taken"></p>
+        </div>
+        <div class="pie-chart-container">
+            <canvas id="result-pie-chart"></canvas>
+        </div>
+        <button onclick="showAnswers()">Show Correct Answers</button>
+    </div>
+
+    <!-- Answer Review Page -->
+    <div id="answer-page" class="answer-page">
+        <button class="close-btn" onclick="closeAnswers()">Close</button>
+        <h2>Correct Answers</h2>
+        <div id="answers-list" class="answers-list-container"></div>
+    </div>
+
+
+    <script>
+        // Timer Setup
+        let timeLeft = 10 * 60; // 20 minutes in seconds
+        let timer;
+        let startTime;
+
+        function startTimer() {
+            startTime = Date.now();
+            timer = setInterval(() => {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up!");
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        // Dynamic Quiz Content
+        const questions = [
+
+        {
+        question: "Which of the following is an input device?",
+        options: ["Monitor", "Keyboard", "Printer", "Speaker"],
+        correct: 1
+    },
+    {
+        question: "What is the full form of CPU?",
+        options: ["Central Processing Unit", "Computer Processing Unit", "Central Program Unit", "Central Peripheral Unit"],
+        correct: 0
+    },
+    {
+        question: "Which of the following is NOT a type of software?",
+        options: ["System Software", "Application Software", "Utility Software", "Electrical Software"],
+        correct: 3
+    },
+    {
+        question: "What is the function of an operating system?",
+        options: ["Manages hardware and software", "Plays music files", "Scans for viruses", "Prints documents"],
+        correct: 0
+    },
+    {
+        question: "What is the full form of RAM?",
+        options: ["Read and Memory", "Random Access Memory", "Readable Access Memory", "Run Access Machine"],
+        correct: 1
+    },
+    {
+        question: "Which key is used to refresh a webpage?",
+        options: ["F2", "F5", "F10", "F12"],
+        correct: 1
+    },
+    {
+        question: "Which of the following is an example of an operating system?",
+        options: ["MS Paint", "Windows 10", "MS Word", "Google Chrome"],
+        correct: 1
+    },
+    {
+        question: "Which of the following is a storage device?",
+        options: ["Monitor", "Hard Disk", "Keyboard", "Scanner"],
+        correct: 1
+    },
+    {
+        question: "What is the main function of a web browser?",
+        options: ["To write documents", "To browse the internet", "To play games", "To edit images"],
+        correct: 1
+    },
+    {
+        question: "Which of the following is NOT a programming language?",
+        options: ["Python", "Java", "HTML", "Microsoft"],
+        correct: 3
+    },
+
+    // MS Word (40%) - 20 Questions
+    {
+        question: "What is the default file extension of a Microsoft Word document?",
+        options: [".txt", ".docx", ".xls", ".ppt"],
+        correct: 1
+    },
+    {
+        question: "Which key combination is used to copy text in MS Word?",
+        options: ["Ctrl + C", "Ctrl + X", "Ctrl + V", "Ctrl + P"],
+        correct: 0
+    },
+    {
+        question: "What is the function of ‘Ctrl + V’ in MS Word?",
+        options: ["Copy", "Paste", "Cut", "Print"],
+        correct: 1
+    },
+    {
+        question: "Which feature in MS Word is used to check spelling mistakes?",
+        options: ["AutoCorrect", "Thesaurus", "Grammar Checker", "Word Count"],
+        correct: 0
+    },
+    {
+        question: "What is the shortcut key to save a document in MS Word?",
+        options: ["Ctrl + S", "Ctrl + P", "Ctrl + V", "Ctrl + O"],
+        correct: 0
+    },
+    {
+        question: "Which menu option is used to insert a picture in MS Word?",
+        options: ["File", "Home", "Insert", "View"],
+        correct: 2
+    },
+    {
+        question: "What is the purpose of the ‘Find and Replace’ feature in MS Word?",
+        options: ["To find spelling mistakes", "To replace a word with another", "To find synonyms", "To delete words"],
+        correct: 1
+    },
+    {
+        question: "What is the maximum zoom percentage in MS Word?",
+        options: ["100%", "200%", "500%", "400%"],
+        correct: 3
+    },
+    {
+        question: "What does the ‘Bold’ option do in MS Word?",
+        options: ["Makes text slanted", "Makes text darker and thicker", "Underlines the text", "Highlights the text"],
+        correct: 1
+    },
+    {
+        question: "Which shortcut is used to print a document?",
+        options: ["Ctrl + S", "Ctrl + P", "Ctrl + O", "Ctrl + N"],
+        correct: 1
+    },
+    {
+        question: "What is the function of ‘Ctrl + B’ in MS Word?",
+        options: ["Italic text", "Underline text", "Bold text", "Open a file"],
+        correct: 2
+    },
+    {
+        question: "What is the default font in MS Word?",
+        options: ["Times New Roman", "Calibri", "Arial", "Courier New"],
+        correct: 1
+    },
+    {
+        question: "What is the purpose of headers and footers in MS Word?",
+        options: ["To insert tables", "To insert charts", "To insert text at the top and bottom of every page", "To format the text"],
+        correct: 2
+    },
+
+    // MS Excel (30%) - 15 Questions
+    {
+        question: "What is the default file extension for an MS Excel file?",
+        options: [".docx", ".xls", ".xlsx", ".pptx"],
+        correct: 2
+    },
+    {
+        question: "What does the SUM function do in Excel?",
+        options: ["Subtracts numbers", "Adds numbers", "Divides numbers", "Multiplies numbers"],
+        correct: 1
+    },
+    {
+        question: "How are rows labeled in Excel?",
+        options: ["A, B, C", "1, 2, 3", "a, b, c", "i, ii, iii"],
+        correct: 1
+    },
+    {
+        question: "What is a cell in MS Excel?",
+        options: ["A box where data is entered", "A row", "A column", "A worksheet"],
+        correct: 0
+    },
+    {
+        question: "What is the function of ‘Merge & Center’ in Excel?",
+        options: ["Merges multiple cells and centers the text", "Deletes a cell", "Moves text to the left", "Changes font size"],
+        correct: 0
+    },
+    {
+        question: "What symbol is used to start a formula in Excel?",
+        options: ["$", "#", "=", "&"],
+        correct: 2
+    },
+    {
+        question: "Which function is used to find the average of a range of numbers?",
+        options: ["SUM", "AVG", "AVERAGE", "MEAN"],
+        correct: 2
+    },
+    {
+        question: "Which function is used to count the number of values in a range?",
+        options: ["COUNT", "SUM", "COUNTA", "COUNTIF"],
+        correct: 0
+    },
+
+    // MS PowerPoint (10%) - 5 Questions
+    {
+        question: "What is the default file extension for an MS PowerPoint file?",
+        options: [".docx", ".xls", ".pptx", ".txt"],
+        correct: 2
+    },
+    {
+        question: "What is a slide in PowerPoint?",
+        options: ["A page in a presentation", "A text box", "A spreadsheet", "A file"],
+        correct: 0
+    },
+    {
+        question: "What is the use of Slide Transition in PowerPoint?",
+        options: ["To change slide colors", "To animate slides", "To add text", "To insert charts"],
+        correct: 1
+    },
+    {
+        question: "Which shortcut is used to start a slideshow from the beginning?",
+        options: ["F1", "F5", "F10", "Ctrl + P"],
+        correct: 1
+    },
+    {
+        question: "Which option is used to insert a new slide in PowerPoint?",
+        options: ["File", "Insert", "Home", "View"],
+        correct: 2
+    },
+
+    // ................
+
+    {
+        question: "Which key is used to delete a selected file permanently without moving it to the Recycle Bin?",
+        options: ["Delete", "Shift + Delete", "Ctrl + Delete", "Alt + Delete"],
+        correct: 1
+    },
+    {
+        question: "Which part of the computer is considered the 'brain'?",
+        options: ["Hard Drive", "RAM", "CPU", "Monitor"],
+        correct: 2
+    },
+    {
+        question: "Which of the following is an example of application software?",
+        options: ["Windows 10", "Google Chrome", "BIOS", "RAM"],
+        correct: 1
+    },
+    {
+        question: "Which type of memory is non-volatile and retains data even when the computer is turned off?",
+        options: ["RAM", "ROM", "Cache", "Register"],
+        correct: 1
+    },
+
+    // Additional MS Word Questions
+    {
+        question: "What is the shortcut key to open a new document in MS Word?",
+        options: ["Ctrl + N", "Ctrl + O", "Ctrl + P", "Ctrl + M"],
+        correct: 0
+    },
+    {
+        question: "Which feature in MS Word is used to change the spacing between lines?",
+        options: ["Page Layout", "Paragraph Spacing", "Line Spacing", "Indentation"],
+        correct: 2
+    },
+    {
+        question: "Which of the following file formats is NOT supported in MS Word?",
+        options: [".doc", ".pdf", ".ppt", ".rtf"],
+        correct: 2
+    },
+
+    // Additional MS Excel Questions
+    {
+        question: "Which function in Excel returns the highest value in a range?",
+        options: ["MAX", "MIN", "LARGE", "HIGH"],
+        correct: 0
+    },
+    {
+        question: "Which of the following is a valid cell reference in MS Excel?",
+        options: ["A1", "1A", "AA1", "1AA"],
+        correct: 0
+    },
+    {
+        question: "What is the shortcut key to insert a new worksheet in MS Excel?",
+        options: ["Shift + F11", "Ctrl + N", "Ctrl + F", "Alt + W"],
+        correct: 0
+    },
+    {
+        question: "Which Excel feature is used to join text from two or more cells?",
+        options: ["Merge & Center", "Concatenate", "Wrap Text", "AutoSum"],
+        correct: 1
+    },
+
+    // Additional MS PowerPoint Questions
+    {
+        question: "Which shortcut key is used to insert a new slide in PowerPoint?",
+        options: ["Ctrl + S", "Ctrl + M", "Ctrl + N", "Shift + N"],
+        correct: 1
+    },
+    {
+        question: "What is the function of the 'Slide Master' in PowerPoint?",
+        options: ["To manage slide layouts", "To add animations", "To insert charts", "To play videos"],
+        correct: 0
+    },
+    {
+        question: "Which file extension is used for PowerPoint templates?",
+        options: [".ppt", ".pptx", ".potx", ".pdf"],
+        correct: 2
+    }
+            // Add more questions as needed
+        ];
+
+        // Load Quiz Again
+        function loadQuiz() {
+            const quizContent = document.getElementById("quiz-content");
+            quizContent.innerHTML = ""; // Clear previous questions
+            questions.forEach((q, index) => {
+                let questionHTML = `
+                    <div class="question-container">
+                        <p>${index + 1}. ${q.question}</p>
+                        ${q.options.map((option, i) => 
+                            `<input type="radio" name="q${index}" value="${i}" id="q${index}-opt${i}"> 
+                            <label for="q${index}-opt${i}">${option}</label><br>`).join('')}
+                    </div>`;
+                quizContent.innerHTML += questionHTML;
+            });
+        }
+
+        let answers = [];
+
+        function submitQuiz() {
+            clearInterval(timer);
+            let score = 0;
+            answers = [];
+            questions.forEach((q, index) => {
+                const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+                const correctAnswer = q.correct;
+                const userAnswer = selectedAnswer ? parseInt(selectedAnswer.value) : null;
+                answers.push({
+                    question: q.question,
+                    options: q.options,
+                    correctAnswer: q.options[correctAnswer],
+                    selectedAnswer: userAnswer !== null ? q.options[userAnswer] : 'None',
+                    isCorrect: userAnswer === correctAnswer
+                });
+                if (userAnswer === correctAnswer) score++;
+            });
+
+            const totalQuestions = questions.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+
+            // Calculate the time taken in minutes and seconds
+            const elapsedTimeInSeconds = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsedTimeInSeconds / 60);
+            const seconds = elapsedTimeInSeconds % 60;
+
+            // Displaying results
+            document.getElementById("student-name-result").textContent = document.getElementById("student-name").value;
+            document.getElementById("result-msg").textContent = `You answered ${score} out of ${totalQuestions} questions correctly.`;
+            document.getElementById("score-percentage").textContent = `Your score: ${percentage}%`;
+            document.getElementById("time-taken").textContent = `Time taken: ${minutes} minutes ${seconds} seconds`;
+
+            // Displaying the Pie Chart
+            const ctx = document.getElementById('result-pie-chart').getContext('2d');
+            const resultPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        label: 'Quiz Result',
+                        data: [score, totalQuestions - score],
+                        backgroundColor: ['#4caf50', '#f44336'],
+                    }]
+                }
+            });
+
+            // Show the result popup
+            document.getElementById("result-popup").style.display = 'block';
+        }
+
+        function showAnswers() {
+            const answersList = document.getElementById("answers-list");
+            answersList.innerHTML = '';
+            answers.forEach((answer, index) => {
+                const isCorrectClass = answer.isCorrect ? 'correct-answer' : 'incorrect-answer';
+                answersList.innerHTML += `
+                    <p>${index + 1}. ${answer.question}
+                        <br><strong>Correct Answer:</strong> <span class="${isCorrectClass}">${answer.correctAnswer}</span>
+                        <br><strong>Your Answer:</strong> <span class="${isCorrectClass}">${answer.selectedAnswer}</span>
+                    </p>`;
+            });
+            document.getElementById("answer-page").style.display = 'block';
+        }
+
+        function closeAnswers() {
+            document.getElementById("answer-page").style.display = 'none';
+        }
+
+        // Show student form popup at the start
+        document.getElementById("student-popup").style.display = 'block';
+
+        // Start the quiz when student form is submitted
+        document.getElementById("student-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            document.getElementById("student-popup").style.display = 'none';
+            document.querySelector(".quiz-container").style.display = 'block';
+            startTimer();
+            loadQuiz();
+        });
+    </script>
+</body>
+</html>
